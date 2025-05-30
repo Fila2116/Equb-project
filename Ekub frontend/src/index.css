@@ -1,0 +1,30 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+@import "@fontsource/inter/400.css"; /* Regular */
+@import "@fontsource/inter/600.css"; /* Semi-Bold */
+@import "@fontsource/inter/700.css"; /* Bold */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* For WebKit browsers (Chrome, Safari) */
+::-webkit-scrollbar {
+  width: 8px; /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Color of the scrollbar track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888; /* Color of the scrollbar thumb */
+  border-radius: 10px; /* Rounded corners of the scrollbar thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Color of the scrollbar thumb on hover */
+}
+
+.scrollbar {
+  scrollbar-width: thin;
+}

@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "typeRoots": ["@types", "./node_modules/@types","./types"],
+    "outDir": "./dist",
+    "strict": true,
+    "jsx": "react",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/app/shared/mail/services/mail.service.tsx",
+    "src/app/shared/mail/templates/otp-mail.template.tsx"
+  ],
+  "exclude": ["node_modules"]
+}

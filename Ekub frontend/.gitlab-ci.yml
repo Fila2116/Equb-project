@@ -1,0 +1,38 @@
+variables:
+  DEPLOY_TEST_DIR: /var/www/test-front
+  DEPLOY_MAIN_DIR: /var/www/prod-front
+
+stages:
+  - deploy
+
+deploy-test:
+  stage: deploy
+  image: alpine:latest
+  only:
+    - dev
+  # tags:
+  #   - equb
+  script:
+    - apk update && apk add openssh-client bash rsync
+    - eval $(ssh-agent -s)
+    - echo "$hageregna_key" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - rsync -vv -rz --delete --exclude='.env' --exclude='node_modules' . $hageregna_user@$hageregna_ip:$DEPLOY_TEST_DIR
+   
+deploy-main:
+  stage: deploy
+  image: alpine:latest
+  only:
+    - production
+  # tags:
+  #   - equb
+  script:
+    - apk update && apk add openssh-client bash rsync
+    - eval $(ssh-agent -s)
+    - echo "$hageregna_key" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - rsync -vv -rz --delete --exclude='.env' --exclude='node_modules' . $hageregna_user@$hageregna_ip:$DEPLOY_MAIN_DIR

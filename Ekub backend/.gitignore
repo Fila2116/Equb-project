@@ -1,0 +1,20 @@
+node_modules/
+
+# Public files
+
+public/images/category/c*
+public/images/avatar/a*
+public/images/banner/b*
+public/images/payment/p*
+public/images/guarantee/g*
+
+.env
+src/app/shared/notification/configs/service-account.json
+dist/app/shared/notification/configs/service-account.json
+
+console.log
+dist/access.log
+
+
+stderr.log
+tmp/

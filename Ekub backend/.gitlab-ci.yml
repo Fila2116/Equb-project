@@ -1,0 +1,61 @@
+variables:
+  DEPLOY_DEV_DIR: /var/www/dev
+  DEPLOY_PROD_DIR: /var/www/production
+  DEPLOY_TEST_DIR: /var/www/test
+
+
+stages:
+  - deploy
+
+deploy-test:
+  stage: deploy
+  image: alpine:latest
+  only:
+    - local.lidya
+  tags:
+    - equb
+  script:
+    - apk update && apk add openssh-client bash rsync docker-compose
+    - eval $(ssh-agent -s)
+    - echo "$hageregna_key" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - rsync -vv -rz --delete --exclude='.env' --exclude='public' --exclude='Dockerfile' --exclude='node_modules' --exclude='docker-compose.yml' . $hageregna_user@$hageregna_ip:$DEPLOY_TEST_DIR
+    - ssh $hageregna_user@$hageregna_ip "cd $DEPLOY_TEST_DIR && npm install && npm install -g pm2 && sudo pm2 restart test-equb"
+  
+
+deploy-dev:
+  stage: deploy
+  image: alpine:latest
+  only:
+    - dev
+  tags:
+    - equb
+  script:
+    - apk update && apk add openssh-client bash rsync docker-compose
+    - eval $(ssh-agent -s)
+    - echo "$hageregna_key" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - rsync -vv -rz --delete --exclude='.env' --exclude='public' --exclude='Dockerfile' --exclude='node_modules' --exclude='docker-compose.yml' . $hageregna_user@$hageregna_ip:$DEPLOY_DEV_DIR
+    - ssh $hageregna_user@$hageregna_ip "cd $DEPLOY_DEV_DIR && npm install && npm install -g pm2 && npx prisma generate && npx prisma db push && sudo pm2 restart dev-equb"
+
+deploy-production:
+  stage: deploy
+  image: alpine:latest
+  only:
+    - production
+  tags:
+    - equb
+  script:
+    - apk update && apk add openssh-client bash rsync
+    - apk add --no-cache docker-cli
+    - eval $(ssh-agent -s)
+    - echo "$hageregna_key" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - rsync -vv -rz --exclude='.env' --exclude='public' --exclude='Dockerfile' --exclude='node_modules' --exclude='docker-compose.yml' . $hageregna_user@$hageregna_ip:$DEPLOY_PROD_DIR
+    - ssh $hageregna_user@$hageregna_ip "cd $DEPLOY_PROD_DIR && npm install && npm install -g pm2 && npx prisma generate && npx prisma db push && sudo pm2 restart production"

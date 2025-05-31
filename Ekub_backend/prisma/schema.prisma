@@ -1,0 +1,607 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // binaryTargets = ["debian-openssl-1.0.x"]
+}
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL_DEV")
+// }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_PROD")
+}
+
+//--------------Enums------------------------------//
+
+enum Gender {
+  male
+  female
+}
+
+enum State {
+  active
+  inactive
+  deleted
+}
+
+enum RoleType {
+  super_admin
+  admin
+  customer_service
+  custom
+}
+
+enum Permissions {
+  all
+  user
+  staff
+  role
+  bank
+  company_bank
+  permissions
+  equb
+  equb_type
+  equb_category
+  branch
+  banner
+  payment
+  equber
+  equber_request
+  setting
+}
+
+enum EqubStatus {
+  registering
+  started
+  completed
+}
+
+enum PaymentType {
+  registering
+  equb
+  lottery
+}
+
+enum SettingType {
+  notificationTime
+}
+
+enum SettingTypeValue {
+  numericValue
+  booleanValue
+  validFrom
+  validUntil
+}
+
+enum LotteryType {
+  finance
+  request
+  other
+}
+
+//--------------Models------------------------------//
+
+model Staff {
+  id                     String     @id @default(uuid())
+  email                  String     @unique
+  fullName               String?
+  firstName              String
+  lastName               String
+  phoneNumber            String
+  password               String
+  avatar                 String?
+  state                  State      @default(active)
+  isActive               Boolean    @default(false)
+  role                   Role       @relation(fields: [roleId], references: [id])
+  passwordResetToken     String?
+  passwordResetExpiresIn DateTime?
+  equbs                  Equb[]
+  activities             Activity[] @relation("doneTo")
+  doneActivities         Activity[] @relation("doneBy")
+  roleId                 String
+  createdAt              DateTime   @default(now()) @map("created_at")
+  updatedAt              DateTime   @updatedAt @map("updated_at")
+  approvedPayments       Payment[]  @relation("approvedBy")
+  branch                 Branch     @relation(fields: [branchId], references: [id])
+  branchId               String
+  OtpCodeExpires         DateTime?
+  adminOtpCode           String?
+  FailureCount           Int        @default(0)
+  BolckEndDate           DateTime?
+}
+
+model Role {
+  id          String        @id @default(uuid())
+  type        RoleType
+  name        String        @unique
+  description String        @db.Text
+  state       State         @default(active)
+  permissions Permissions[]
+  Staff       Staff[]
+  activities  Activity[]
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+}
+
+model Branch {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  city        String
+  phoneNumber String?
+  state       State      @default(active)
+  staffs      Staff[]
+  equbs       Equb[]
+  activities  Activity[]
+  isMain      Boolean    @default(false)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+}
+
+model CompanyProfile {
+  id         String   @id @default(uuid())
+  country    String   @unique
+  city       String
+  address    String
+  email      String
+  tel        String
+  createdAzt DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+}
+
+model InActiveUser {
+  id          String   @id @default(uuid())
+  email       String?
+  phoneNumber String?
+  createdAt   DateTime @default(now()) @map("created_at")
+}
+
+model User {
+  id                     String         @id @default(uuid())
+  username               String?        @unique
+  email                  String?
+  fullName               String?
+  firstName              String?
+  lastName               String?
+  phoneNumber            String?        @unique
+  password               String?
+  avatar                 String?
+  googleId               String?        @unique
+  isVerified             Boolean        @default(false)
+  decline_reason         String?
+  passwordResetToken     String?
+  passwordResetExpiresIn DateTime?
+  state                  State          @default(active)
+  kyc                    Kyc?           @relation(fields: [kycId], references: [id])
+  kycId                  String?
+  bankAccounts           BankAccount[]
+  createdEqubs           Equb[]         @relation("createdBy")
+  joinedEqubs            Equb[]         @relation("joinedEqubs")
+  activities             Activity[]
+  deviceTokens           DeviceToken[]
+  profileCompletion      Int            @default(25)
+  createdAt              DateTime       @default(now()) @map("created_at")
+  updatedAt              DateTime       @updatedAt @map("updated_at")
+  equberUsers            EquberUser[]   @relation("user")
+  payments               Payment[]
+  notifications          Notification[]
+  guaranteedEquberUser   EquberUser[]   @relation("guaranteeUser")
+}
+
+model Guarantee {
+  id          String       @id @default(uuid())
+  picture     String?
+  fullName    String?
+  firstName   String
+  lastName    String
+  phoneNumber String
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  EquberUser  EquberUser[]
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  token     String
+  state     State    @default(active)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@unique([userId, token])
+}
+
+model Kyc {
+  id              String   @id @default(uuid())
+  firstName       String
+  fatherName      String
+  grandFatherName String?
+  motherName      String?
+  gender          Gender?
+  nationality     String?
+  city            String?
+  subcity         String?
+  woreda          String?
+  houseNumber     String?
+  occupation      String?
+  tin             String?
+  state           State    @default(active)
+  user            User[]
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+}
+
+model Bank {
+  id          String        @id @default(uuid())
+  name        String
+  description String?       @db.Text
+  bankAccount BankAccount[]
+  activities  Activity[]
+  state       State         @default(active)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+}
+
+model BankAccount {
+  id            String   @id @default(uuid())
+  bank          Bank     @relation(fields: [bankId], references: [id])
+  accountNumber String
+  accountName   String
+  user          User     @relation(fields: [userId], references: [id])
+  isPrimary     Boolean  @default(false)
+  bankId        String
+  userId        String
+  state         State    @default(active)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+}
+
+model CompanyBankAccount {
+  id            String     @id @default(uuid())
+  accountNumber String
+  accountName   String
+  state         State      @default(active)
+  activities    Activity[]
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+  Payment       Payment[]
+}
+
+model EqubType {
+  id          String     @id @default(uuid())
+  name        String
+  description String?    @db.Text
+  interval    Int        @unique
+  Equb        Equb[]
+  activities  Activity[]
+  state       State      @default(active)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+}
+
+model EqubCategory {
+  id           String     @id @default(uuid())
+  name         String     @unique
+  description  String?    @db.Text
+  hasReason    Boolean    @default(false)
+  isSaving     Boolean?
+  needsRequest Boolean    @default(false)
+  order        Int        @unique @default(autoincrement())
+  Equb         Equb[]
+  activities   Activity[]
+  state        State      @default(active)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+}
+
+model Equber {
+  id                    String                 @id @default(uuid())
+  lotteryNumber         String                 @unique
+  hasWonEqub            Boolean                @default(false)
+  isNotified            Boolean                @default(false)
+  equb                  Equb?                  @relation(fields: [equbId], references: [id])
+  equbId                String?
+  activities            Activity[]
+  isGruop               Boolean
+  users                 EquberUser[]
+  dividedBy             Int                    @default(1)
+  filledPercent         Int                    @default(0)
+  payments              Payment[]
+  totalPaid             Int                    @default(0)
+  paidRound             Int                    @default(0)
+  financePoint          Int                    @default(0)
+  kycPoint              Int                    @default(0)
+  adminPoint            Int                    @default(0)
+  totalEligibilityPoint Int                    @default(0)
+  included              Boolean                @default(false)
+  excluded              Boolean                @default(false)
+  show                  Boolean                @default(true)
+  winRound              Int?
+  state                 State                  @default(active)
+  lotteryRequest        LotteryRequest?        @relation
+  paymentHistories      EquberPaymentHistory[]
+  createdAt             DateTime               @default(now()) @map("created_at")
+  updatedAt             DateTime               @updatedAt @map("updated_at")
+}
+
+model LotteryRequest {
+  id          String   @id @default(uuid())
+  itemName    String
+  description String   @db.Text
+  amount      Float
+  equber      Equber   @relation(fields: [equberId], references: [id])
+  equberId    String   @unique
+  state       State    @default(active)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+}
+
+model EquberUser {
+  id                          String              @id @default(uuid())
+  user                        User                @relation("user", fields: [userId], references: [id])
+  userId                      String
+  guaranteeUser               User?               @relation("guaranteeUser", fields: [guaranteeUserId], references: [id])
+  guaranteeUserId             String?
+  guarantee                   Guarantee?          @relation(fields: [guaranteeId], references: [id])
+  guaranteeId                 String?
+  stake                       Float
+  hasTakenEqub                Boolean             @default(false)
+  hasClaimed                  Boolean             @default(false)
+  claimAmount                 Float               @default(0)
+  equber                      Equber?             @relation(fields: [equberId], references: [id])
+  equberId                    String?
+  equberRequest               EquberRequest?      @relation(fields: [equberRequestId], references: [id])
+  equberRequestId             String?
+  totalPaid                   Int                 @default(0)
+  paidRound                   Int                 @default(0)
+  payments                    EquberUserPayment[]
+  lotteryPayments             Payment[]
+  paymentScore                Float               @default(0)
+  paymentScoreCalculatedRound Int                 @default(0)
+  state                       State               @default(active)
+  calculatedPaidAmount        Int                 @default(0)
+  createdAt                   DateTime            @default(now()) @map("created_at")
+  updatedAt                   DateTime            @updatedAt @map("updated_at")
+}
+
+model EquberRequest {
+  id            String       @id @default(uuid())
+  hasWonEqub    Boolean      @default(false)
+  equb          Equb?        @relation(fields: [equbId], references: [id])
+  equbId        String?
+  activities    Activity[]
+  users         EquberUser[]
+  isGruop       Boolean
+  dividedBy     Int          @default(1)
+  payments      Payment[]
+  filledPercent Int          @default(0)
+  state         State        @default(active)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+}
+
+model Equb {
+  id                   String          @id @default(uuid())
+  name                 String          @unique
+  description          String?         @db.Text
+  equbType             EqubType        @relation(fields: [equbTypeId], references: [id])
+  equbCategory         EqubCategory    @relation(fields: [equbCategoryId], references: [id])
+  equbTypeId           String
+  equbCategoryId       String
+  other                String?
+  goal                 Float?
+  numberOfEqubers      Int
+  equbAmount           Int
+  equbers              Equber[]
+  equberRequests       EquberRequest[]
+  status               EqubStatus      @default(registering)
+  createdByUser        User?           @relation("createdBy", fields: [userId], references: [id])
+  joinedUsers          User[]          @relation("joinedEqubs")
+  userId               String?
+  createdByStaff       Staff?          @relation(fields: [staffId], references: [id])
+  staffId              String?
+  activities           Activity[]
+  previousRound        Int             @default(1)
+  currentRound         Int             @default(1)
+  nextRound            Int             @default(1)
+  groupLimit           Int             @default(1)
+  serviceCharge        Float           @default(3.5)
+  nextRoundDate        DateTime?
+  nextRoundLotteryType LotteryType     @default(finance)
+  currentRoundWinners  Int             @default(1)
+  nextRoundTime        String          @default("00:00")
+  startDate            DateTime?
+  endDate              DateTime?
+  state                State           @default(active)
+  branch               Branch          @relation(fields: [branchId], references: [id])
+  branchId             String
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+  hasLastRoundWinner   Boolean         @default(false)
+  banners              Banner[]
+  Payment              Payment[]
+  lotteries            Lottery[]
+  notifications        Notification[]
+
+  @@index([equbTypeId])
+  @@index([equbCategoryId])
+  @@index([status])
+  @@index([userId])
+  @@index([staffId])
+  @@index([nextRoundDate])
+  @@index([startDate])
+  @@index([state])
+  @@index([branchId])
+  @@index([equbTypeId, equbCategoryId])
+}
+
+model Payment {
+  id                   String              @id @default(uuid())
+  type                 PaymentType
+  amount               Float
+  paymentMethod        String
+  equb                 Equb                @relation(fields: [equbId], references: [id])
+  equbId               String
+  equber               Equber?             @relation(fields: [equberId], references: [id]) // ✅ Added this
+  equberId             String? // ✅ Added this
+  equberUser           EquberUser?         @relation(fields: [equberUserId], references: [id])
+  equberUserId         String?
+  user                 User                @relation(fields: [userId], references: [id])
+  userId               String
+  companyBankAccount   CompanyBankAccount? @relation(fields: [companyBankAccountId], references: [id])
+  companyBankAccountId String?
+  round                Int
+  approved             Boolean             @default(false)
+  approvedBy           Staff?              @relation("approvedBy", fields: [staffId], references: [id])
+  staffId              String?
+  state                State               @default(active)
+  picture              String?
+  reference            String?
+  createdAt            DateTime            @default(now()) @map("created_at")
+  updatedAt            DateTime            @updatedAt @map("updated_at")
+  equberRequests       EquberRequest[]
+  equberUserPayments   EquberUserPayment[]
+  transactionId        String?             @unique
+
+  @@index([equbId])
+  @@index([equberUserId])
+  @@index([userId])
+  @@index([approved])
+  @@index([state])
+}
+
+model EquberUserPayment {
+  id           String      @id @default(uuid())
+  payment      Payment     @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  amount       Float
+  paymentId    String
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  equberUser   EquberUser? @relation(fields: [equberUserId], references: [id])
+  equberUserId String?
+}
+
+model Lottery {
+  id              String   @id @default(uuid())
+  equb            Equb     @relation(fields: [equbId], references: [id])
+  round           Int
+  winners         String
+  eligibleEqubers String   @db.Text
+  equbId          String
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([equbId, round])
+}
+
+model Banner {
+  id          String     @id @default(uuid())
+  name        String
+  picture     String?
+  description String?    @db.Text
+  validFrom   DateTime?
+  validUntil  DateTime?
+  equb        Equb?      @relation(fields: [equbId], references: [id])
+  activities  Activity[]
+  state       State      @default(active)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  equbId      String?
+}
+
+model Activity {
+  id                   String              @id @default(uuid())
+  action               Permissions
+  user                 User?               @relation(fields: [userId], references: [id])
+  branch               Branch?             @relation(fields: [branchId], references: [id])
+  role                 Role?               @relation(fields: [roleId], references: [id])
+  staff                Staff?              @relation("doneTo", fields: [doneToStaffId], references: [id])
+  equb                 Equb?               @relation(fields: [equbId], references: [id])
+  equber               Equber?             @relation(fields: [equberId], references: [id])
+  equberRequest        EquberRequest?      @relation(fields: [equberRequestId], references: [id])
+  bank                 Bank?               @relation(fields: [bankId], references: [id])
+  companyBankAccount   CompanyBankAccount? @relation(fields: [companyBankAccountId], references: [id])
+  equbType             EqubType?           @relation(fields: [equbTypeId], references: [id])
+  banner               Banner?             @relation(fields: [bannerId], references: [id])
+  equbCategory         EqubCategory?       @relation(fields: [equbCategoryId], references: [id])
+  doneBy               Staff               @relation("doneBy", fields: [staffId], references: [id])
+  description          String?             @db.Text
+  userId               String?
+  bannerId             String?
+  roleId               String?
+  equbId               String?
+  equberId             String?
+  equberRequestId      String?
+  bankId               String?
+  companyBankAccountId String?
+  branchId             String?
+  equbTypeId           String?
+  equbCategoryId       String?
+  staffId              String
+  doneToStaffId        String?
+  state                State               @default(active)
+  createdAt            DateTime            @default(now()) @map("created_at")
+  updatedAt            DateTime            @updatedAt @map("updated_at")
+}
+
+model Setting {
+  id           String            @id @default(uuid())
+  name         SettingType
+  value        SettingTypeValue?
+  picture      String?
+  description  String?           @db.Text
+  validFrom    DateTime?
+  validUntil   DateTime?
+  numericValue Int?
+  floatValue   Int?
+  booleanValue Boolean?
+  state        State             @default(active)
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+}
+
+model EquberPaymentHistory {
+  id             String   @id @default(uuid())
+  equber         Equber   @relation(fields: [equberId], references: [id])
+  round          Int
+  expectedAmount Float
+  totalPaid      Float
+  equberId       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  body      String
+  user      User     @relation(fields: [userId], references: [id])
+  equb      Equb?    @relation(fields: [equbId], references: [id])
+  equbId    String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ------------ New BrandingConfig Model ------------
+
+model BrandingConfig {
+  id              Int      @id @default(autoincrement())
+  logoLightUrl    String
+  logoDarkUrl     String
+  primaryColor    String 
+  secondaryColor  String 
+  defaultDarkMode Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("branding_configs")
+}

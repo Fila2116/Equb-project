@@ -3,11 +3,12 @@ import { GeneralInfo } from "./general-info";
 import { VisualIdentity } from "./visual-identity";
 import { LivePreview } from "./live-preview";
 import { SaveButton } from "./save-button";
+import api from "../../utils/axios";
 
 export interface BrandingData {
   appName: string;
-  logoLight: string | null;
-  logoDark: string | null;
+  logoLight: File | string | null;
+  logoDark: File | string | null;
   primaryColor: string;
   secondaryColor: string;
   defaultDarkMode: boolean;
@@ -39,11 +40,43 @@ export function BrandingSettings() {
 
   const isValid = brandingData.appName.trim().length > 0;
 
-  const handleSave = () => {
-    if (isValid) {
-      console.log("Saving branding data:", brandingData);
+  const handleSave = async () => {
+    if (!isValid) return;
+
+    try {
+      const formData = new FormData();
+
+      formData.append("primaryColor", brandingData.primaryColor);
+      formData.append("secondaryColor", brandingData.secondaryColor);
+      formData.append(
+        "defaultDarkMode",
+        brandingData.defaultDarkMode.toString()
+      );
+      formData.append("appName", brandingData.appName);
+
+      if (brandingData.logoLight instanceof File) {
+        formData.append("logoLight", brandingData.logoLight);
+      }
+
+      if (brandingData.logoDark instanceof File) {
+        formData.append("logoDark", brandingData.logoDark);
+      }
+
+      const response = await api.post("/branding-config", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      // Optional: handle success UI feedback
+      console.log("Branding saved successfully", response.data);
       setHasChanges(false);
-      // Here you would typically save to your backend
+    } catch (error: any) {
+      console.error(
+        "Failed to save branding data:",
+        error.response?.data || error.message
+      );
+      // Optional: show error to user
     }
   };
 

@@ -33,6 +33,7 @@ import { Toaster } from "sonner";
 import FetchSettings from "./components/admin/settings/FetchSettings.tsx";
 import Withdraws from "./components/admin/notification/index.tsx";
 import FetchCompanyProfile from "./components/admin/companyProfile/FetchCompanyProfile.tsx";
+import BrandingTheme from "./components/admin/brandingTheme/BrandingTheme.tsx";
 
 
 
@@ -63,6 +64,10 @@ const router = createBrowserRouter([
       {
         path: "/dashboard/lottoryManagement",
         element: <LotteryManagement />,
+      },
+      {
+        path: "/dashboard/brandingTheme",
+        element: <BrandingTheme />,
       },
       {
         path: "/dashboard/lotterydetail/:id",

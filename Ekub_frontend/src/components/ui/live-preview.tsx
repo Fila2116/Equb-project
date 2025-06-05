@@ -10,8 +10,23 @@ interface LivePreviewProps {
 export function LivePreview({ data, onUpdate }: LivePreviewProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [previousData, setPreviousData] = useState(data);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const currentLogo = data.defaultDarkMode ? data.logoDark : data.logoLight;
+
+  useEffect(() => {
+    if (currentLogo instanceof File) {
+      const objectUrl = URL.createObjectURL(currentLogo);
+      setLogoPreview(objectUrl);
+
+      // Cleanup URL object when component unmounts or currentLogo changes
+      return () => URL.revokeObjectURL(objectUrl);
+    } else if (typeof currentLogo === "string") {
+      setLogoPreview(currentLogo);
+    } else {
+      setLogoPreview(null);
+    }
+  }, [currentLogo]);
 
   // Detect changes and trigger update animation
   useEffect(() => {
@@ -58,7 +73,7 @@ export function LivePreview({ data, onUpdate }: LivePreviewProps) {
                   }
                 `}>
                 {/* Status Bar */}
-                <div className="flex justify-between items-center mb-6 animate-in slide-in-from-top duration-500 pt-4">
+                <div className="flex justify-between items-center mb-2 animate-in slide-in-from-top duration-500 pt-4">
                   <div className="text-xs font-medium text-slate-400">9:41</div>
                   <div className="flex space-x-1">
                     <Toggle
@@ -71,11 +86,11 @@ export function LivePreview({ data, onUpdate }: LivePreviewProps) {
                 </div>
 
                 {/* Logo */}
-                <div className="flex justify-center mb-4 animate-in zoom-in duration-700 delay-200">
-                  {currentLogo ? (
+                <div className="flex justify-center mb-2 animate-in zoom-in duration-700 delay-200">
+                  {logoPreview ? (
                     <div className="relative group/logo">
                       <img
-                        src={currentLogo || "/placeholder.svg"}
+                        src={logoPreview || "/placeholder.svg"}
                         alt="App Logo"
                         className="w-28 h-28 object-contain transition-all duration-500 group-hover/logo:scale-110 group-hover/logo:rotate-3"
                       />
@@ -85,12 +100,9 @@ export function LivePreview({ data, onUpdate }: LivePreviewProps) {
                     </div>
                   ) : (
                     <div
-                      className={`
-                        w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl transition-all duration-500 hover:scale-110 hover:rotate-3
-                        ${
-                          data.defaultDarkMode ? "bg-slate-700" : "bg-slate-300"
-                        }
-                      `}
+                      className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl transition-all duration-500 hover:scale-110 hover:rotate-3 ${
+                        data.defaultDarkMode ? "bg-slate-700" : "bg-slate-300"
+                      }`}
                       style={{
                         backgroundColor: data.primaryColor,
                         transform: isUpdating
@@ -105,7 +117,7 @@ export function LivePreview({ data, onUpdate }: LivePreviewProps) {
                 {/* App Name */}
                 <h1
                   className={`
-                    text-center text-2xl font-bold mb-4 transition-all duration-500 animate-in slide-in-from-bottom delay-300
+                    text-center text-xl font-bold mb-3 transition-all duration-500 animate-in slide-in-from-bottom delay-300
                     ${data.defaultDarkMode ? "text-white" : "text-slate-900"}
                    ${isUpdating ? "scale-105" : "scale-100"}
                   `}>
@@ -119,7 +131,7 @@ export function LivePreview({ data, onUpdate }: LivePreviewProps) {
                       type="email"
                       placeholder="Email"
                       className={`
-                        w-full px-4 py-2 rounded-xl border text-xs transition-all duration-500
+                        w-full px-4 py-2 rounded-md border text-xs transition-all duration-500
                         ${
                           data.defaultDarkMode
                             ? "bg-[#1C1C1E] border-[#2C2C2E] text-white placeholder-slate-400"
@@ -127,7 +139,7 @@ export function LivePreview({ data, onUpdate }: LivePreviewProps) {
                         }
                         ${isUpdating ? "animate-pulse" : ""}
                       `}
-                      disabled
+                      // disabled
                     />
                   </div>
 
@@ -136,7 +148,7 @@ export function LivePreview({ data, onUpdate }: LivePreviewProps) {
                       type="password"
                       placeholder="Password"
                       className={`
-                        w-full px-4 py-2 rounded-xl border text-xs transition-all duration-500
+                        w-full px-4 py-2 rounded-md border text-xs transition-all duration-500
                         ${
                           data.defaultDarkMode
                             ? "bg-[#1C1C1E] border-[#2C2C2E] text-white placeholder-slate-400"
@@ -144,14 +156,14 @@ export function LivePreview({ data, onUpdate }: LivePreviewProps) {
                         }
                         ${isUpdating ? "animate-pulse" : ""}
                       `}
-                      disabled
+                      // disabled
                     />
                   </div>
 
                   {/* Primary Action Button */}
                   <button
                     className={`
-                      w-full py-2 rounded-xl text-white font-medium text-xs transition-all duration-500 transform hover:scale-105 hover:shadow-lg
+                      w-full py-2 rounded-full text-white font-medium text-xs transition-all duration-500 transform hover:scale-105 hover:shadow-lg
                       ${isUpdating ? "animate-pulse scale-105 shadow-lg" : ""}
                     `}
                     style={{
@@ -167,7 +179,7 @@ export function LivePreview({ data, onUpdate }: LivePreviewProps) {
                   {/* Secondary Action Button */}
                   <button
                     className={`
-                      w-full py-2 rounded-xl font-medium text-xs transition-all duration-500 transform hover:scale-105 hover:shadow-lg border
+                      w-full py-2 rounded-full font-medium text-xs transition-all duration-500 transform hover:scale-105 hover:shadow-lg border
                       ${isUpdating ? "animate-pulse scale-105 shadow-lg" : ""}
                       ${
                         data.defaultDarkMode

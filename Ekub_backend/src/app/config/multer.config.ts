@@ -8,7 +8,9 @@ export const RESOURCES = {
   AVATAR: "AVATAR",
   BANNER: "BANNER",
   PAYMENT: "PAYMENT",
-  GUARANTEE: "GUARANTEE"
+  GUARANTEE: "GUARANTEE",
+  BRANDING_LIGHT: "BRANDING_LIGHT",
+  BRANDING_DARK: "BRANDING_DARK",
 };
 
 export const DESTINANTIONS = {
@@ -17,7 +19,8 @@ export const DESTINANTIONS = {
     AVATAR: "../../../public/images/avatar",
     BANNER: "../../../public/images/banner",
     PAYMENT: "../../../public/images/payment",
-    GUARANTEE: "../../../public/images/guarantee"
+    GUARANTEE: "../../../public/images/guarantee",
+    BRANDING: "../../../public/images/branding",
   },
 };
 
@@ -34,6 +37,10 @@ export const FILENAME: {
     `payment-${uuidv4()}${path.extname(originalname)}`,
   GUARANTEE: (originalname: string) =>
     `guarantee-${uuidv4()}${path.extname(originalname)}`,
+  BRANDING_LIGHT: (originalname: string) =>
+    `branding-logo-${uuidv4()}${path.extname(originalname)}`,
+  BRANDING_DARK: (originalname: string) =>
+    `branding-logo-${uuidv4()}${path.extname(originalname)}`,
 };
 
 export const FILTERS = {
@@ -43,7 +50,7 @@ export const FILTERS = {
   },
 };
 
-export const multerConfig = ( 
+export const multerConfig = (
   resource: string,
   destination: string,
   filter: any
@@ -57,7 +64,7 @@ export const multerConfig = (
     },
     filename: function (req, file, cb) {
       const fileName = FILENAME[resource](file.originalname);
-      req.body.fileName=fileName
+      req.body.fileName = fileName;
       cb(null, fileName);
     },
   });
@@ -72,7 +79,6 @@ export const multerConfig = (
       fieldSize: 1024 * 1024 * 1024,
     },
     fileFilter: function (req, file, cb) {
-           
       if (filter.CONTENT.includes(file.mimetype)) {
         cb(null, true);
       } else {

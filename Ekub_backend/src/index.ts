@@ -46,12 +46,11 @@ import equbCategoryRouter from "./app/routes/admin/equb/equb-category.route";
 import bannerRouter from "./app/routes/admin/banner/banner.route";
 import dashboardRouter from "./app/routes/admin/dashboard/dashboard.route";
 import paymentRouter from "./app/routes/admin/payment/payment.route";
-import settingRouter from "./app/routes/admin/setting/index.route";
+import settingRouter from "./app/routes/admin/setting/setting.route";
 import serverTimeRouter from "./app/routes/server-time.route";
 import AdminReport from "./app/routes/admin/report/reportData.route";
-
-
 import smsRouter from "./app/routes/admin/sms/sms.route";
+import braningRoute from "./app/routes/admin/setting/branding.route";
 
 import "./app/schedules/draw-lottery.job";
 import "./app/schedules/sendMessageToInactiveUser.job";
@@ -103,7 +102,8 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(compression());
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "../public")));
 
 /**
@@ -124,7 +124,6 @@ app.use("/api/v1/user/notification", UserNotifications);
 app.use("/api/v1/user/report", reportDataRouter);
 app.use("/api/v1/setting", settingRouter);
 
-
 //Admin routes
 app.use("/api/v1/staff/auth", staffAuthRouter);
 app.use("/api/v1/role", roleRouter);
@@ -144,7 +143,7 @@ app.use("/api/v1/payment", paymentRouter);
 app.use("/api/v1/setting", settingRouter);
 app.use("/api/v1/report", AdminReport);
 app.use("api/v1/bulksms", smsRouter);
-
+app.use("/api/v1/branding-config", braningRoute);
 /**
  * Non existing url middleware
  */

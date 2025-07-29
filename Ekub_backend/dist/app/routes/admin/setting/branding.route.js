@@ -29,12 +29,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const branding_controller_1 = require("../../../controllers/admin/setting/branding.controller");
-const branding_controller_2 = require("../../../controllers/admin/setting/branding.controller");
 const StaffAuthMiddleware = __importStar(require("../../../middlewares/staff-auth.middleware"));
 const client_1 = require("@prisma/client");
 const router = express_1.default.Router();
-router.get('/', branding_controller_1.getBrandingConfig);
-router.post('/', branding_controller_1.upsertBrandingConfig); // or use `.put` if you prefer
-router.delete("/", StaffAuthMiddleware.verifyStaff, StaffAuthMiddleware.restrictStaff(client_1.Permissions.setting), branding_controller_2.resetBrandingConfig);
-router.patch("/color", StaffAuthMiddleware.verifyStaff, StaffAuthMiddleware.restrictStaff(client_1.Permissions.setting), branding_controller_2.updateBrandingColors);
+router.get("/", branding_controller_1.getBrandingConfig);
+router.put("/", branding_controller_1.uploadBrandingImages, branding_controller_1.upsertBrandingConfig);
+router.delete("/", StaffAuthMiddleware.verifyStaff, StaffAuthMiddleware.restrictStaff(client_1.Permissions.staff), branding_controller_1.resetBrandingConfig);
+router.patch("/color", StaffAuthMiddleware.verifyStaff, StaffAuthMiddleware.restrictStaff(client_1.Permissions.staff), branding_controller_1.updateBrandingColors);
 exports.default = router;

@@ -43,10 +43,11 @@ const equb_category_route_2 = __importDefault(require("./app/routes/admin/equb/e
 const banner_route_2 = __importDefault(require("./app/routes/admin/banner/banner.route"));
 const dashboard_route_1 = __importDefault(require("./app/routes/admin/dashboard/dashboard.route"));
 const payment_route_2 = __importDefault(require("./app/routes/admin/payment/payment.route"));
-const index_route_1 = __importDefault(require("./app/routes/admin/setting/index.route"));
+const setting_route_1 = __importDefault(require("./app/routes/admin/setting/setting.route"));
 const server_time_route_1 = __importDefault(require("./app/routes/server-time.route"));
 const reportData_route_2 = __importDefault(require("./app/routes/admin/report/reportData.route"));
 const sms_route_1 = __importDefault(require("./app/routes/admin/sms/sms.route"));
+const branding_route_1 = __importDefault(require("./app/routes/admin/setting/branding.route"));
 require("./app/schedules/draw-lottery.job");
 require("./app/schedules/sendMessageToInactiveUser.job");
 // import "./app/schedules/notifyBeforeLottery";
@@ -86,12 +87,13 @@ if (env.NODE_ENV === "development") {
 // console.error = logger.error.bind(logger);
 const corsOptions = {
     origin: "*",
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use((0, cors_1.default)(corsOptions));
 app.use((0, compression_1.default)());
-app.use(express_1.default.json());
+app.use(express_1.default.json({ limit: "1mb" }));
+app.use(express_1.default.urlencoded({ extended: true, limit: "1mb" }));
 app.use(express_1.default.static(path_1.default.join(__dirname, "../public")));
 /**
  * REST API Route Middleware
@@ -109,7 +111,7 @@ app.use("/api/v1/user/banner", banner_route_1.default);
 app.use("/api/v1/user/payment", payment_route_1.default);
 app.use("/api/v1/user/notification", notification_route_1.default);
 app.use("/api/v1/user/report", reportData_route_1.default);
-app.use("/api/v1/setting", index_route_1.default);
+app.use("/api/v1/setting", setting_route_1.default);
 //Admin routes
 app.use("/api/v1/staff/auth", staff_auth_route_1.default);
 app.use("/api/v1/role", role_route_1.default);
@@ -126,9 +128,10 @@ app.use("/api/v1/equb/category", equb_category_route_2.default);
 app.use("/api/v1/banner", banner_route_2.default);
 app.use("/api/v1/dashboard", dashboard_route_1.default);
 app.use("/api/v1/payment", payment_route_2.default);
-app.use("/api/v1/setting", index_route_1.default);
+app.use("/api/v1/setting", setting_route_1.default);
 app.use("/api/v1/report", reportData_route_2.default);
 app.use("api/v1/bulksms", sms_route_1.default);
+app.use("/api/v1/branding-config", branding_route_1.default);
 /**
  * Non existing url middleware
  */

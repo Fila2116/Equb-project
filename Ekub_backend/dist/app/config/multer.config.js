@@ -8,12 +8,15 @@ const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const uuid_1 = require("uuid");
 const app_error_1 = __importDefault(require("../shared/errors/app.error"));
+// 2. Keep your original constants exactly as they were
 exports.RESOURCES = {
     CATEGORY: "CATEGORY",
     AVATAR: "AVATAR",
     BANNER: "BANNER",
     PAYMENT: "PAYMENT",
-    GUARANTEE: "GUARANTEE"
+    GUARANTEE: "GUARANTEE",
+    BRANDING_LIGHT: "BRANDING_LIGHT",
+    BRANDING_DARK: "BRANDING_DARK",
 };
 exports.DESTINANTIONS = {
     IMAGE: {
@@ -21,7 +24,8 @@ exports.DESTINANTIONS = {
         AVATAR: "../../../public/images/avatar",
         BANNER: "../../../public/images/banner",
         PAYMENT: "../../../public/images/payment",
-        GUARANTEE: "../../../public/images/guarantee"
+        GUARANTEE: "../../../public/images/guarantee",
+        BRANDING: "../../../public/images/branding",
     },
 };
 exports.FILENAME = {
@@ -30,6 +34,8 @@ exports.FILENAME = {
     BANNER: (originalname) => `banner-${(0, uuid_1.v4)()}${path_1.default.extname(originalname)}`,
     PAYMENT: (originalname) => `payment-${(0, uuid_1.v4)()}${path_1.default.extname(originalname)}`,
     GUARANTEE: (originalname) => `guarantee-${(0, uuid_1.v4)()}${path_1.default.extname(originalname)}`,
+    BRANDING_LIGHT: (originalname) => `branding-logo-${(0, uuid_1.v4)()}${path_1.default.extname(originalname)}`,
+    BRANDING_DARK: (originalname) => `branding-logo-${(0, uuid_1.v4)()}${path_1.default.extname(originalname)}`,
 };
 exports.FILTERS = {
     IMAGE: {
@@ -37,39 +43,47 @@ exports.FILTERS = {
         MESSAGE: "Only .png, .jpg and .jpeg format allowed!",
     },
 };
+// 3. Corrected multerConfig function with proper typing
 const multerConfig = (resource, destination, filter) => {
-    /**
-     * Multer disk storage
-     */
     const storage = multer_1.default.diskStorage({
         destination: function (req, file, cb) {
-            cb(null, path_1.default.join(__dirname, destination));
+            try {
+                cb(null, path_1.default.join(__dirname, destination));
+            }
+            catch (err) {
+                cb(new Error("Invalid file destination"), '');
+            }
         },
         filename: function (req, file, cb) {
-            const fileName = exports.FILENAME[resource](file.originalname);
-            req.body.fileName = fileName;
-            cb(null, fileName);
+            try {
+                const fileName = exports.FILENAME[resource](file.originalname);
+                req.body.fileName = fileName;
+                cb(null, fileName);
+            }
+            catch (err) {
+                cb(new Error("Failed to generate filename"), '');
+            }
         },
     });
-    /**
-     * Multer file upload with filters
-     */
-    const upload = (0, multer_1.default)({
+    return (0, multer_1.default)({
         storage,
         limits: {
-            fileSize: 1024 * 1024 * 1024,
-            fieldSize: 1024 * 1024 * 1024,
+            fileSize: 1024 * 1024 * 5, // 5MB
+            fieldSize: 1024 * 1024 * 10, // 10MB
         },
         fileFilter: function (req, file, cb) {
-            if (filter.CONTENT.includes(file.mimetype)) {
-                cb(null, true);
+            try {
+                if (filter.CONTENT.includes(file.mimetype)) {
+                    cb(null, true);
+                }
+                else {
+                    cb(new app_error_1.default(filter.MESSAGE, 400));
+                }
             }
-            else {
-                cb(null, false);
-                return cb(new app_error_1.default(filter.MESSAGE, 400));
+            catch (err) {
+                cb(new app_error_1.default("File filter error", 500));
             }
         },
     });
-    return upload;
 };
 exports.multerConfig = multerConfig;
